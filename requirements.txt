@@ -9,7 +9,7 @@ idna==2.5
 praw==7.5.0
 prawcore==2.3.0
 python-dateutil==2.6.0
-PyYAML==6.0
+PyYAML==6.0.1
 requests==2.31.0
 six==1.12
 tornado==6.3.2
