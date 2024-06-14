@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "shreddit"
+version = "6.1.0"
+description = "Deletes your reddit history"
+authors = ["David John <david@vaunt.eu>"]
+maintainers = [
+    "Mike Kusold <git@mikekusold.com>",
+]
+repository = "https://github.com/kusold/Shreddit"
+license = "BSD-2-Clause"
+readme = "README.md"
+packages = [{include = "shreddit", from = "."}]
+
+
+[tool.poetry.scripts]
+shreddit = "shreddit.app:main"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+decorator="4.0.10"
+wheel="0.43.0"
+appdirs="1.4.3"
+arrow="1.3.0"
+backports-abc="0.5"
+certifi="2023.7.22"
+chardet="3.0.4"
+idna="2.5"
+praw="7.5.0"
+prawcore="2.3.0"
+python-dateutil="2.8.2"
+PyYAML="6.0.1"
+requests="2.32.3"
+six="1.12"
+tornado="6.4.1"
+update-checker="0.18"
+urllib3="2.0.7"
+setuptools = "^69.0.0"
+
+
+prometheus-client="0.16.0"
+
+[tool.poetry.dev-dependencies]
+testresources="2.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

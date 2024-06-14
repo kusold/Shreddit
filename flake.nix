@@ -1,106 +1,49 @@
 {
-  description = "Shreddit cleans your reddit history";
+  description = "Application packaged using poetry2nix";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable-small";
+    poetry2nix = {
+      url = "github:nix-community/poetry2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
-    ...
-  }: let
-    allSystems = [
-      "aarch64-darwin"
-      "aarch64-linux"
-      "x86_64-darwin"
-      "x86_64-linux"
-    ];
-    # Helper to provide system-specific attributes
-    forAllSystems = f:
-      nixpkgs.lib.genAttrs allSystems
-      (system: f {pkgs = import nixpkgs {inherit system;};});
-  in {
-    devShells = forAllSystems ({pkgs}: {
-      default = let
-        python = pkgs.python311;
-      in
-        pkgs.mkShell {
-          packages = [
-            # Python plus helper tools
-            (python.withPackages (ps:
-              with ps; [
-                # Formatting
-                black
-                # setuptools
-              ]))
-          ];
-        };
-    });
-    packages = forAllSystems ({pkgs}: {
-      default = let
-        python = pkgs.python311;
-        pythonPackages = pkgs.python311Packages;
-        pythonWithPkgs = python.withPackages (pythonPkgs:
-          with pythonPkgs; [
-            # This list contains tools for Python development.
-            # You can also add other tools, like black.
-            #
-            # Note that even if you add Python packages here like PyTorch or Tensorflow,
-            # they will be reinstalled when running `pip -r requirements.txt` because
-            # virtualenv is used below in the shellHook.
-            # ipython
-            pip
-            setuptools
-            # virtualenvwrapper
-            wheel
-            black
-          ]);
+    flake-utils,
+    poetry2nix,
+  }:
+    flake-utils.lib.eachDefaultSystem (system: let
+      # see https://github.com/nix-community/poetry2nix/tree/master#api for more functions and examples.
+      pkgs = nixpkgs.legacyPackages.${system};
+      inherit (poetry2nix.lib.mkPoetry2Nix {inherit pkgs;}) mkPoetryApplication;
+    in {
+      packages = {
+        # shreddit = mkPoetryApplication {projectDir = self;};
+        shreddit = mkPoetryApplication {projectDir = ./.;};
+        default = self.packages.${system}.shreddit;
+      };
 
-        backports-abc = let
-          pname = "backports_abc";
-          version = "0.5";
-        in
-          pythonPackages.buildPythonPackage {
-            inherit pname version;
-            src = pkgs.fetchPypi {
-              inherit pname version;
-              sha256 = "sha256-AzvlRRSgPiVd91xa7o+eZy9mP5OrtyNETK7I/kNDe94=";
-            };
-            doCheck = false;
-          };
-      in
-        with pythonPackages;
-        # python.withPackages (ps:
-          buildPythonApplication rec {
-            pname = "shreddit";
-            version = "0.6.0";
-            src = ./.;
-            pyproject = true;
-            # build-system = buildSystem;
-            # build-system = [
-            #   setuptools
-            # ];
-            propagatedBuildInputs = [
-              setuptools
+      # Shell for app dependencies.
+      #
+      #     nix develop
+      #
+      # Use this shell for developing your app.
+      devShells.default = pkgs.mkShell {
+        inputsFrom = [self.packages.${system}.shreddit];
+      };
 
-              pyyaml
-              appdirs
-              arrow
-              backports-abc
-              praw
-              requests
-              tornado
-              prometheus-client
-            ];
-            nativeBuildInputs = [
-              setuptools
-              wheel
-            ];
-          };
-      # );
+      # Shell for poetry.
+      #
+      #     nix develop .#poetry
+      #
+      # Use this shell for changes to pyproject.toml and poetry.lock.
+      devShells.poetry = pkgs.mkShell {
+        packages = [pkgs.poetry];
+      };
+      formatter = pkgs.alejandra;
     });
-    # };
-    formatter = forAllSystems ({pkgs}: pkgs.alejandra);
-  };
 }
