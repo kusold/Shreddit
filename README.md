@@ -18,11 +18,31 @@ I will not be adding cron support inside of the container. You can run the conta
 `latest` is updated everytime a tag is created. `master` is updated on every merge to master.
 # FAQ - Common Error(s)
 
-1. `<something> installed but version <something> is required.` - Upgrade 'setuptools' with `pip install --upgrade setuptools`
+1. `<something> installed but version <something> is required.` - Upgrade 'setuptools' with `pip install --upgrade setuptools` or use `uv pip install --upgrade setuptools`
 2. `Command "python setup.py egg_info" failed with error code 1` - You are missing a dependency. Try installing using manual instructions below.
 3. ` Invalid requirement: '<<<<<<< HEAD' Traceback (most recent call last): et cetera, et cetera1` - You are trying to install the original repo's broken code. Clone and install mine with the fixes.
 
 # Pre-install conditions:
+
+## Installing uv (Recommended)
+
+The project now uses `uv` for faster dependency management. To install uv:
+
+```bash
+# On macOS and Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Alternatively, you can use pip:
+
+```bash
+pip install uv
+```
+
+## Installing pip (Alternative)
 
 Make sure you install pip
 
@@ -34,11 +54,16 @@ Then update pip with
 
 Note: Python2 is now depreciated. Use python3.
 
-## Manual Installation
+## Installation with uv (Recommended)
 
-1. Clone the `shreddit` repository to a directory: `$ git clone https://github.com/pythonInRelay/Shreddit.git`
-2. From the directory, run `$ pip3 install -r requirements.txt`
-3. Run `$ python3 setup.py install` to install the package and the `shreddit` command line utility.  This is typically
+1. Clone the `shreddit` repository to a directory: `$ git clone https://github.com/kusold/Shreddit.git`
+2. From the directory, run `$ uv pip install .` to install the package and the `shreddit` command line utility.
+   - For development with optional dependencies: `$ uv pip install -e ".[dev]"`
+
+## Manual Installation (pip)
+
+1. Clone the `shreddit` repository to a directory: `$ git clone https://github.com/kusold/Shreddit.git`
+2. From the directory, run `$ pip3 install .` to install the package and the `shreddit` command line utility.  This is typically
    either run in a virtualenv or using administrative privileges for global installation (so you can run the `shreddit` command from anywhere).
 
 ## Post-install steps
