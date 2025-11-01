@@ -16,30 +16,48 @@ docker run --rm -v $(pwd)/config:/config ghcr.io/kusold/shreddit:latest
 I will not be adding cron support inside of the container. You can run the container on a cron schedule if you desire.
 
 `latest` is updated everytime a tag is created. `master` is updated on every merge to master.
-# FAQ - Common Error(s)
 
-1. `<something> installed but version <something> is required.` - Upgrade 'setuptools' with `pip install --upgrade setuptools`
-2. `Command "python setup.py egg_info" failed with error code 1` - You are missing a dependency. Try installing using manual instructions below.
-3. ` Invalid requirement: '<<<<<<< HEAD' Traceback (most recent call last): et cetera, et cetera1` - You are trying to install the original repo's broken code. Clone and install mine with the fixes.
+## Installation with uv (Recommended)
 
-# Pre-install conditions:
+This project now uses [uv](https://github.com/astral-sh/uv) for fast, reliable package management.
 
-Make sure you install pip
+### Prerequisites
 
-`$ apt install python3-pip`
+Install uv:
+```bash
+# On macOS and Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-Then update pip with
+# On Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
 
-`$ python3 -m pip install --upgrade pip`
+### Installation
+
+1. Clone the `shreddit` repository to a directory:
+   ```bash
+   git clone https://github.com/kusold/Shreddit.git
+   cd Shreddit
+   ```
+
+2. Install the package using uv:
+   ```bash
+   uv pip install .
+   ```
+
+   Or to install in a virtual environment:
+   ```bash
+   uv venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   uv pip install .
+   ```
+
+## Manual Installation (Legacy)
 
 Note: Python2 is now depreciated. Use python3.
 
-## Manual Installation
-
-1. Clone the `shreddit` repository to a directory: `$ git clone https://github.com/pythonInRelay/Shreddit.git`
-2. From the directory, run `$ pip3 install -r requirements.txt`
-3. Run `$ python3 setup.py install` to install the package and the `shreddit` command line utility.  This is typically
-   either run in a virtualenv or using administrative privileges for global installation (so you can run the `shreddit` command from anywhere).
+1. Clone the `shreddit` repository to a directory: `$ git clone https://github.com/kusold/Shreddit.git`
+2. From the directory, run `$ pip3 install .`
 
 ## Post-install steps
 
