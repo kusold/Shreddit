@@ -37,6 +37,12 @@ Homepage = "https://github.com/kusold/Shreddit"
 [project.scripts]
 shreddit = "shreddit.app:main"
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["shreddit"]
 
