@@ -23,6 +23,10 @@ class Shredder(object):
     """This class stores state for configuration, API objects, logging, etc. It exposes a shred() method that
     application code can call to start it.
     """
+
+    # Reddit API max items per listing
+    REDDIT_API_LISTING_LIMIT = 1000
+
     def __init__(self, config, user):
         logging.basicConfig()
         self._logger = logging.getLogger("shreddit")
@@ -73,7 +77,7 @@ class Shredder(object):
     def shred(self):
         deleted = self._remove_things(self._build_iterator())
         self._logger.info("Finished deleting {} items. ".format(deleted))
-        if deleted >= 1000:
+        if deleted >= self.REDDIT_API_LISTING_LIMIT:
             # This user has more than 1000 items to handle, which angers the gods of the Reddit API. So chill for a
             # while and do it again.
             self._logger.info("Waiting {} seconds and continuing...".format(self._batch_cooldown))
