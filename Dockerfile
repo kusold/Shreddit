@@ -3,7 +3,7 @@ FROM ghcr.io/astral-sh/uv:python3.11-alpine
 WORKDIR /shreddit
 
 # Copy project files
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 COPY shreddit ./shreddit
 
 # Install the project with uv
