@@ -1,4 +1,7 @@
-FROM ghcr.io/astral-sh/uv:python3.14-alpine
+FROM python:3.14-alpine
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 WORKDIR /shreddit
 
