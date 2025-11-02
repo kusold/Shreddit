@@ -1,0 +1,26 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [6.2.0](https://github.com/kusold/Shreddit/compare/v6.1.0...v6.2.0) (2025-11-02)
+
+### Features
+
+* add automated release workflow with semantic versioning and binary builds ([7a514a2](https://github.com/kusold/Shreddit/commit/7a514a29a3466b7dbf03545ca89d162fb380387f))
+* migrate project to use uv for package management ([87f6207](https://github.com/kusold/Shreddit/commit/87f62072ddc4ee8120a1b48214812fd0491c318c))
+* upgrade to Python 3.12 and add setuptools dependency ([05bc95b](https://github.com/kusold/Shreddit/commit/05bc95b2bbd59165588907040818d260849ce226))
+* upgrade to Python 3.13 ([c19a2e1](https://github.com/kusold/Shreddit/commit/c19a2e174569fbb14069660358d59287039ff476))
+* upgrade to Python 3.14 ([cf76248](https://github.com/kusold/Shreddit/commit/cf76248192e6fee033c18ea0bca784491b7d093f))
+
+### Bug Fixes
+
+* add missing appdirs dependency to pyproject.toml ([39c2066](https://github.com/kusold/Shreddit/commit/39c206654ca7f587d20f349bd85248bbad201943))
+* include README.md in Dockerfile for build ([53ee142](https://github.com/kusold/Shreddit/commit/53ee1422d7630dfbd6aa8873b4fde088bb581be5))
+
+### Documentation
+
+* add Apple Container instructions for macOS users ([9650e5d](https://github.com/kusold/Shreddit/commit/9650e5d6f3963dd7a7223f9e72145228d1465166))
+
+### Code Refactoring
+
+* switch to official Python image with uv via multi-stage build ([ff5b6ba](https://github.com/kusold/Shreddit/commit/ff5b6ba57e94c81c1129ed5916b320772dc4765b))
