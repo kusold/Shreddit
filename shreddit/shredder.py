@@ -1,18 +1,23 @@
-import arrow
-import argparse
 import json
 import logging
 import os
-import praw
-import sys
 import time
-import yaml
-from datetime import datetime, timedelta
-from praw.models import Comment, Submission
-from prawcore.exceptions import ResponseException, OAuthException, BadRequest
 from re import sub
-from shreddit.util import get_sentence, ShredditError
-from shreddit.metrics import JOB_TIME, COMMENT_DELETED_COUNT, COMMENT_RECENT_COUNT, COMMENT_WHITELISTED_COUNT, SUBMISSION_DELETED_COUNT
+
+import arrow
+import praw
+from praw.models import Comment, Submission
+from prawcore.exceptions import BadRequest, OAuthException, ResponseException
+
+from shreddit.metrics import (
+    COMMENT_DELETED_COUNT,
+    COMMENT_RECENT_COUNT,
+    COMMENT_WHITELISTED_COUNT,
+    JOB_TIME,
+    SUBMISSION_DELETED_COUNT,
+)
+from shreddit.util import ShredditError, get_sentence
+
 
 class Shredder(object):
     """This class stores state for configuration, API objects, logging, etc. It exposes a shred() method that
@@ -23,7 +28,7 @@ class Shredder(object):
         self._logger = logging.getLogger("shreddit")
         self._logger.setLevel(level=logging.DEBUG if config.get("verbose", True) else logging.INFO)
         self.__dict__.update({"_{}".format(k): config[k] for k in config})
-        
+
         self._user = user
         self._connect()
 

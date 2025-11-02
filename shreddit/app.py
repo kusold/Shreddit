@@ -1,14 +1,15 @@
 """This module contains script entrypoints for shreddit.
 """
 import argparse
-import yaml
-import logging
 import os
+
 import pkg_resources
+import yaml
 from appdirs import user_config_dir
+
 from shreddit import default_config
-from shreddit.shredder import Shredder
 from shreddit.metrics import JOB_LAST_SUCCESS, push_metrics
+from shreddit.shredder import Shredder
 
 
 def main():

@@ -1,6 +1,7 @@
 """Tests for utility functions."""
 import pytest
-from shreddit.util import get_sentence, ShredditError
+
+from shreddit.util import ShredditError, get_sentence
 
 
 class TestGetSentence:
