@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.3.2](https://github.com/kusold/Shreddit/compare/v6.3.1...v6.3.2) (2025-11-02)
+
+### Documentation
+
+* add PR workflow requirements to AGENTS.md ([7fea88e](https://github.com/kusold/Shreddit/commit/7fea88ecff6aa6facbf072991a882e2d33849b36))
+
 ## [6.3.1](https://github.com/kusold/Shreddit/compare/v6.3.0...v6.3.1) (2025-11-02)
 
 ### Bug Fixes
