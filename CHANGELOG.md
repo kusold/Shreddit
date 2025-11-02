@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.4.0](https://github.com/kusold/Shreddit/compare/v6.3.2...v6.4.0) (2025-11-02)
+
+### Features
+
+* **lint:** add ruff linter with CI integration and auto-fixes ([939aeba](https://github.com/kusold/Shreddit/commit/939aeba142f5d64814dfdf76eabb9175a4722af5))
+
+### Bug Fixes
+
+* update test workflow to use virtual environment and add Python 3.14 ([dffa0ff](https://github.com/kusold/Shreddit/commit/dffa0ff971ef74d7810d568824f548d835e567c0))
+
+### Documentation
+
+* add PR description update requirement to agent workflow ([343d913](https://github.com/kusold/Shreddit/commit/343d913b8317498589f83f4ac4056b7b054cc32f))
+* add test requirement before commits in AGENTS.md ([a61dd3e](https://github.com/kusold/Shreddit/commit/a61dd3e7fdf13eef0c9c8b066f8d2436338f355a))
+* clarify repository history in README callout ([3713d24](https://github.com/kusold/Shreddit/commit/3713d24f215a26ad3b5f7f0d5a3bc171ef864d7c))
+
+### Code Refactoring
+
+* **lint:** eliminate all global ruff ignores and extract magic value constant ([00c9150](https://github.com/kusold/Shreddit/commit/00c9150c051581b71404aa867594a7c71b3f10c6))
+
+### Chores
+
+* remove legacy packaging files and add test suite ([5ddccde](https://github.com/kusold/Shreddit/commit/5ddccde84a769debc682f6746f61551a50265765))
+
 ## [6.3.2](https://github.com/kusold/Shreddit/compare/v6.3.1...v6.3.2) (2025-11-02)
 
 ### Documentation
