@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.3.0](https://github.com/kusold/Shreddit/compare/v6.2.0...v6.3.0) (2025-11-02)
+
+### Features
+
+* add automated Docker security scanning with vulnerability remediation ([c06074d](https://github.com/kusold/Shreddit/commit/c06074dd32014109302cf73369aea2e0066a79fc))
+* add semantic commit validation and improve vulnerability scanning ([b406878](https://github.com/kusold/Shreddit/commit/b406878fd872855478318487366ddede02e4caa6))
+
+### Chores
+
+* add commitlint configuration file ([c74b30e](https://github.com/kusold/Shreddit/commit/c74b30e750b57d3bb73b747909172e959c288588))
+
 ## [6.2.0](https://github.com/kusold/Shreddit/compare/v6.1.0...v6.2.0) (2025-11-02)
 
 ### Features
