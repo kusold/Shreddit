@@ -1,4 +1,5 @@
-from prometheus_client import Summary, Counter, Gauge, push_to_gateway, CollectorRegistry
+from prometheus_client import CollectorRegistry, Counter, Gauge, Summary, push_to_gateway
+
 
 registry = CollectorRegistry()
 COMMENT_DELETED_COUNT = Counter('reddit_comments_deleted', 'Count of comments removed', registry=registry)

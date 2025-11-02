@@ -37,6 +37,31 @@ Homepage = "https://github.com/kusold/Shreddit"
 [project.scripts]
 shreddit = "shreddit.app:main"
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+dev = [
+    "ruff>=0.8.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+# Enable pycodestyle (E/W), Pyflakes (F), and isort (I) rules
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# Allow magic values in tests
+"tests/*" = ["PLR2004"]
+
+[tool.ruff.lint.isort]
+force-single-line = false
+lines-after-imports = 2
+
 [tool.hatch.build.targets.wheel]
 packages = ["shreddit"]
 

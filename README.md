@@ -1,6 +1,6 @@
 # Shreddit
 
-Original repo and Readme.md [here](https://github.com/x89/Shreddit).
+> **About the Original Repository**: The original x89/Shreddit repository was renamed to "Solana-Arbitrage-Bot" and [all Shreddit code was replaced with unrelated cryptocurrency code](https://github.com/x89/Solana-Arbitrage-Bot/pull/185) around mid-2024. All original issues, stars, and history were transferred to that renamed repository, which is why this repo appears to be a "fork" of a Solana bot instead of the original Shreddit. This fork maintains the original Shreddit functionality with security updates and is considered feature-complete. For an alternative implementation, see the [Rust rewrite](https://github.com/andrewbanchich/shreddit) (note: feature parity may differ).
 
 This also includes changes from the [pythonInRelay/Shreddit](https://github.com/pythonInRelay/Shreddit) fork.
 
