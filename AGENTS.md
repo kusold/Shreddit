@@ -1,9 +1,14 @@
 # Agent Guidelines for Shreddit
 
+## Workflow
+- **NEVER commit directly to main** - always use pull requests
+- **Before marking PR as ready**: Build and test the Docker image with `config` directory mounted
+- **Docker test command**: `container build --tag shreddit:test . && container run --rm -v $(pwd)/config:/config shreddit:test`
+
 ## Build/Test/Lint Commands
 - **Install**: `uv pip install -e .`
 - **Run**: `shreddit --help` or `shreddit -c path/to/shreddit.yml`
-- **No formal test suite exists** - test manually with trial mode: `shreddit -c config.yml` (ensure `trial_run: True` in config)
+- **Test with config**: `shreddit -c config/shreddit.yml` (ensure `trial_run: True` in config for safe testing)
 - **No linter configured** - follow PEP 8 style conventions
 
 ## Code Style
