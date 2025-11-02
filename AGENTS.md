@@ -5,6 +5,7 @@
 - **Before each commit**: 
   1. Run linter with `uv run ruff check .` and fix any issues
   2. Run tests with `uv run pytest tests/ -v` and only commit if all tests pass
+- **After each push**: If there is an active PR for the branch, update the PR description to reflect all changes made since diverging from main. Use `gh pr edit <number> --body "..."` to keep the description current.
 - **Before marking PR as ready**: Build and test the Docker image with `config` directory mounted
 - **Docker test command**: `container build --tag shreddit:test . && container run --rm -v $(pwd)/config:/config shreddit:test`
 
