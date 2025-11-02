@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.3.1](https://github.com/kusold/Shreddit/compare/v6.3.0...v6.3.1) (2025-11-02)
+
+### Bug Fixes
+
+* bump idna from 2.5 to 3.7 to resolve CVE-2024-3651 ([3718d94](https://github.com/kusold/Shreddit/commit/3718d949afaba8ac80bdcf200b961683352cfb6d)), closes [#91](https://github.com/kusold/Shreddit/issues/91)
+
+### Documentation
+
+* add AGENTS.md and update documentation for Python 3.12+ requirement ([f28cb49](https://github.com/kusold/Shreddit/commit/f28cb497ebf12b3b602e24a26d42aa87229770a8))
+
+### Chores
+
+* improve semantic-pr workflow documentation ([7d2a8ab](https://github.com/kusold/Shreddit/commit/7d2a8ab37db67f8be5748184b98c05110acf3352))
+
 ## [6.3.0](https://github.com/kusold/Shreddit/compare/v6.2.0...v6.3.0) (2025-11-02)
 
 ### Features

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shreddit"
-version = "6.3.0"
+version = "6.3.1"
 description = "Remove your comment history on Reddit as deleting an account does not do so."
 readme = "README.md"
 license = { text = "FreeBSD License" }
