@@ -2,6 +2,7 @@
 
 ## Workflow
 - **NEVER commit directly to main** - always use pull requests
+- **Before each commit**: Run tests with `uv run pytest tests/ -v` and only commit if all tests pass
 - **Before marking PR as ready**: Build and test the Docker image with `config` directory mounted
 - **Docker test command**: `container build --tag shreddit:test . && container run --rm -v $(pwd)/config:/config shreddit:test`
 
