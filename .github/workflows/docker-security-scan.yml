@@ -170,7 +170,7 @@ jobs:
           ref: ${{ needs.scan.outputs.current_tag }}
 
       - name: Download vulnerability data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: vulnerability-data
 
