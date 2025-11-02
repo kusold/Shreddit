@@ -7,7 +7,7 @@ This also includes changes from the [pythonInRelay/Shreddit](https://github.com/
 ## Docker
 This is the recommended route. If you run into a bug, please ensure it is reproducible inside of docker. I will not troubleshoot local installations.
 
-Create a `config` dirextory. This should include your `praw.ini` and `shreddit.yml` config objects. We will mount this into the docker container.
+Create a `config` directory. This should include your `praw.ini` and `shreddit.yml` config files. We will mount this into the docker container.
 
 ```bash
 docker run --rm -v $(pwd)/config:/config ghcr.io/kusold/shreddit:latest
@@ -82,24 +82,22 @@ container image pull ghcr.io/kusold/shreddit:latest
 container run --rm -v $(pwd)/config:/config ghcr.io/kusold/shreddit:latest
 ```
 
-## Installation with uv (Recommended)
+## Installation with uv
 
-This project now uses [uv](https://github.com/astral-sh/uv) for fast, reliable package management.
+This project uses [uv](https://github.com/astral-sh/uv) for fast, reliable package management.
+
+**Requirements**: Python 3.12 or higher
 
 ### Prerequisites
 
 Install uv:
 ```bash
-# On macOS and Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# On Windows
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 ### Installation
 
-1. Clone the `shreddit` repository to a directory:
+1. Clone the `shreddit` repository:
    ```bash
    git clone https://github.com/kusold/Shreddit.git
    cd Shreddit
@@ -113,16 +111,9 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
    Or to install in a virtual environment:
    ```bash
    uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   source .venv/bin/activate
    uv pip install .
    ```
-
-## Manual Installation (Legacy)
-
-Note: Python2 is now depreciated. Use python3.
-
-1. Clone the `shreddit` repository to a directory: `$ git clone https://github.com/kusold/Shreddit.git`
-2. From the directory, run `$ pip3 install .`
 
 ## Post-install steps
 
@@ -172,7 +163,7 @@ password=123passwordgoeshere123
 
 Keep your praw.ini either in the current directory when running `shreddit`, or in one of the config folders
 [described here](http://praw.readthedocs.io/en/latest/getting_started/configuration/prawini.html) such as
-`~/.config` in Linux or `%APPDATA%` in Windows.
+`~/.config`.
 
 To use more than one account, you can add multiple profiles instead of just `[default]` and use the `-u` option to 
 `shreddit` to choose which one each time.
@@ -217,14 +208,3 @@ optional arguments:
                         directory.
   -u USER, --user USER  User section from praw.ini if not default
 ```
-
-## For Windows users
-
-0. Get Linux. *No really...*
-
-1. Make sure you have Python installed.
-   [Click here for the Python download page](https://www.python.org/downloads/).
-        - **Note:** Install `python 3.x`, not `2.x`.
-2. Follow the [pip installation](#pip-installation) instructions.
-3. Open a new command prompt and verify that the `shreddit` command works before moving on to the [usage](#usage)
-   section.
