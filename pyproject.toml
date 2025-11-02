@@ -25,6 +25,7 @@ dependencies = [
     "praw>=7.5.0",
     "PyYAML>=6.0.1",
     "requests>=2.32.4",
+    "setuptools>=65.0.0",
     "six>=1.12",
     "tornado>=6.5.1",
     "prometheus-client>=0.16.0",
