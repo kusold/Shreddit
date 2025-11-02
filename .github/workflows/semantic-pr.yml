@@ -22,19 +22,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Configure which types are allowed (default: see below)
-          types: |
-            feat
-            fix
-            docs
-            style
-            refactor
-            perf
-            test
-            build
-            ci
-            chore
-            revert
+          # Types are defined in commitlint.config.js
+          # Using @commitlint/config-conventional defaults
           # Configure which scopes are allowed (optional)
           # If not set, all scopes are allowed
           # scopes: |
@@ -128,7 +117,7 @@ jobs:
             echo "  docs: update README"
             echo "  chore: update dependencies"
             echo ""
-            echo "Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+            echo "See commitlint.config.js for allowed types and rules"
           fi
           
           exit $EXIT_CODE
@@ -159,6 +148,10 @@ jobs:
             - \`refactor(api): simplify error handling\`
             
             ### Allowed Types
+            
+            See \`commitlint.config.js\` for the complete list of allowed types and validation rules.
+            
+            Common types include:
             - **feat**: A new feature
             - **fix**: A bug fix
             - **docs**: Documentation only changes
