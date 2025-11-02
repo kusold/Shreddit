@@ -9,13 +9,78 @@ This is the recommended route. If you run into a bug, please ensure it is reprod
 
 Create a `config` dirextory. This should include your `praw.ini` and `shreddit.yml` config objects. We will mount this into the docker container.
 
-```
+```bash
 docker run --rm -v $(pwd)/config:/config ghcr.io/kusold/shreddit:latest
 ```
 
 I will not be adding cron support inside of the container. You can run the container on a cron schedule if you desire.
 
 `latest` is updated everytime a tag is created. `master` is updated on every merge to master.
+
+### Using Apple Container (macOS)
+
+If you're on a Mac with Apple silicon, you can use [Apple's Container framework](https://github.com/apple/container) for a faster, native container experience optimized for macOS.
+
+#### Prerequisites
+
+Install Apple Container (requires macOS 15 or later, macOS 26 recommended):
+
+```bash
+# Download the latest installer from https://github.com/apple/container/releases
+# Double-click the .pkg file and follow the installation instructions
+
+# Start the container service
+container system start
+```
+
+#### Building the image
+
+Build the Shreddit image locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/kusold/Shreddit.git
+cd Shreddit
+
+# Build the image
+container build --tag shreddit:latest --file Dockerfile .
+```
+
+#### Running with Apple Container
+
+Run Shreddit using Apple Container:
+
+```bash
+# Create your config directory with praw.ini and shreddit.yml
+mkdir -p config
+
+# Run the container
+container run --rm -v $(pwd)/config:/config shreddit:latest
+```
+
+Or run it in detached mode:
+
+```bash
+container run --name shreddit --detach --rm -v $(pwd)/config:/config shreddit:latest
+
+# View logs
+container logs shreddit
+
+# Stop the container
+container stop shreddit
+```
+
+#### Pulling from a registry
+
+You can also pull and run the pre-built image from GitHub Container Registry:
+
+```bash
+# Pull the image
+container image pull ghcr.io/kusold/shreddit:latest
+
+# Run it
+container run --rm -v $(pwd)/config:/config ghcr.io/kusold/shreddit:latest
+```
 
 ## Installation with uv (Recommended)
 
