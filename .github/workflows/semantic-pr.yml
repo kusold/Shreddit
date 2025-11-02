@@ -1,0 +1,208 @@
+name: Semantic PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+permissions:
+  pull-requests: write
+  statuses: write
+
+jobs:
+  validate-pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title follows Conventional Commits
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Configure which types are allowed (default: see below)
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          # Configure which scopes are allowed (optional)
+          # If not set, all scopes are allowed
+          # scopes: |
+          #   core
+          #   api
+          #   docker
+          # Require a scope to be provided
+          requireScope: false
+          # Allow multiple scopes (e.g., "feat(api,docker): ...")
+          # disallowMultipleScopes: false
+          # Configure subject pattern (first letter after type/scope)
+          # Default is to require lowercase
+          subjectPattern: ^[a-z].+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            starts with a lowercase letter.
+          # If the PR contains a single commit, ensure the commit message
+          # also follows conventional commits
+          validateSingleCommit: true
+          # For work in progress PRs, you can use "WIP" as a prefix
+          # and the validation will be skipped
+          wip: true
+          # Allows to ignore the PR title validation for specific branches
+          # ignoreLabels: |
+          #   ignore-semantic-pull-request
+
+  validate-commits:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install commitlint
+        run: |
+          npm install -g @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate all commits in PR
+        run: |
+          # Get the list of commits in this PR
+          COMMITS=$(git log --format=%H origin/${{ github.event.pull_request.base.ref }}..HEAD)
+          
+          echo "Validating commits in PR..."
+          EXIT_CODE=0
+          
+          for commit in $COMMITS; do
+            echo "----------------------------------------"
+            echo "Checking commit: $commit"
+            git log -1 --pretty=format:"%s" $commit
+            echo ""
+            
+            # Get commit message
+            COMMIT_MSG=$(git log -1 --pretty=format:"%s%n%n%b" $commit)
+            
+            # Skip merge commits
+            if git log -1 --pretty=format:"%s" $commit | grep -q "^Merge"; then
+              echo "✓ Skipping merge commit"
+              continue
+            fi
+            
+            # Validate with commitlint
+            if echo "$COMMIT_MSG" | npx commitlint; then
+              echo "✓ Commit message is valid"
+            else
+              echo "✗ Commit message is invalid"
+              EXIT_CODE=1
+            fi
+          done
+          
+          echo "----------------------------------------"
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✓ All commit messages are valid!"
+          else
+            echo "✗ Some commit messages are invalid"
+            echo ""
+            echo "Commit messages must follow the Conventional Commits specification:"
+            echo "  <type>[optional scope]: <description>"
+            echo ""
+            echo "Examples:"
+            echo "  feat: add new feature"
+            echo "  fix: resolve bug in parser"
+            echo "  docs: update README"
+            echo "  chore: update dependencies"
+            echo ""
+            echo "Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+          fi
+          
+          exit $EXIT_CODE
+
+      - name: Comment on PR if validation fails
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## ❌ Commit Message Validation Failed
+            
+            Some commits in this PR don't follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+            
+            ### Format Required
+            \`\`\`
+            <type>[optional scope]: <description>
+            
+            [optional body]
+            
+            [optional footer(s)]
+            \`\`\`
+            
+            ### Examples
+            - \`feat: add automated security scanning\`
+            - \`fix: resolve Docker build issue\`
+            - \`docs: update installation guide\`
+            - \`chore: update dependencies\`
+            - \`refactor(api): simplify error handling\`
+            
+            ### Allowed Types
+            - **feat**: A new feature
+            - **fix**: A bug fix
+            - **docs**: Documentation only changes
+            - **style**: Changes that don't affect code meaning (formatting, etc.)
+            - **refactor**: Code change that neither fixes a bug nor adds a feature
+            - **perf**: Performance improvement
+            - **test**: Adding or correcting tests
+            - **build**: Changes to build system or dependencies
+            - **ci**: Changes to CI configuration files and scripts
+            - **chore**: Other changes that don't modify src or test files
+            - **revert**: Reverts a previous commit
+            
+            ### How to Fix
+            
+            You can either:
+            1. **Amend your commit messages** using \`git rebase -i\` and force push
+            2. **Squash commits** when merging (ensure the PR title follows the format)
+            
+            Note: The PR title must also follow this format as it will be used for the merge commit.`;
+            
+            // Check if we already commented
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Commit Message Validation Failed')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
