@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.4.1](https://github.com/kusold/Shreddit/compare/v6.4.0...v6.4.1) (2025-11-02)
+
+### Bug Fixes
+
+* correct semantic-release branch config and remove redundant ruff target-version ([e52007c](https://github.com/kusold/Shreddit/commit/e52007c10f2eda4e10a5f4d6534036b51b9acce3))
+
+### Chores
+
+* update workflows to use main branch instead of master ([06885ad](https://github.com/kusold/Shreddit/commit/06885ada4a69cdb675665278b7451c072cfb5677))
+
 ## [6.4.0](https://github.com/kusold/Shreddit/compare/v6.3.2...v6.4.0) (2025-11-02)
 
 ### Features
