@@ -48,7 +48,6 @@ dev = [
 
 [tool.ruff]
 line-length = 120
-target-version = "6.4.0"
 
 [tool.ruff.lint]
 # Enable pycodestyle (E/W), Pyflakes (F), and isort (I) rules
