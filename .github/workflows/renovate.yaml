@@ -1,0 +1,47 @@
+name: update-dependencies
+on:
+  workflow_dispatch: # allows manual triggering
+  push:
+    paths:
+      - '.github/workflows/renovate.yml'
+      - 'renovate.json'
+      - 'renovate.json5'
+      - 'renovate.jsonc'
+      - '.github/workflows/*renovate*'
+      - '.github/**/renovate*'
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  renovatebot:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      checks: write
+      contents: write
+      deployments: none
+      id-token: none
+      issues: write
+      discussions: none
+      packages: none
+      pages: none
+      pull-requests: write
+      repository-projects: none
+      security-events: read
+      statuses: none
+      
+    steps:
+      - name: Get GitHub token
+        id: get_token
+        uses: actions/create-github-app-token@v2
+        with:
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.GH_APP_ID }}
+
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+          
+      - name: Renovate Bot GitHub Action
+        uses: renovatebot/github-action@v43.0.20
+        with:
+          token: '${{ steps.get_token.outputs.token }}'
