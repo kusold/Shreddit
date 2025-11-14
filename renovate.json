@@ -10,7 +10,7 @@
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
-      "labels": ["github_actions"],
+      "addLabels": ["github_actions"],
       "rangeStrategy": "pin"
     },
     {
