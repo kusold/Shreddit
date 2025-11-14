@@ -3,7 +3,7 @@ name: Docker Security Scan
 on:
   schedule:
     # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch: # Allow manual triggers
 
 permissions:
@@ -20,67 +20,77 @@ jobs:
       vulnerabilities_found: ${{ steps.check_vulns.outputs.vulnerabilities_found }}
       current_tag: ${{ steps.get_tags.outputs.latest_version }}
       old_vuln_count: ${{ steps.check_vulns.outputs.vuln_count }}
-    
-     steps:
-       - name: Set repository variables
-         id: repo_vars
-         run: |
-           echo "repo_lower=${{ github.repository | lower }}" >> $GITHUB_OUTPUT
+      repo_lower: ${{ steps.repo_vars.outputs.repo_lower }}
 
-       - name: Get latest release tag
-         id: get_tags
-         run: |
-           # Get the latest release version
-           LATEST_VERSION=$(gh release list --repo ${{ github.repository }} --limit 1 --json tagName --jq '.[0].tagName')
-           echo "latest_version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
-           echo "Latest version: ${LATEST_VERSION}"
-         env:
-           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Set repository variables
+        id: repo_vars
+        run: |
+          # shellcheck disable=SC2086,SC2129
+          # Lowercase repository owner/name for ghcr path using the environment variable
+          # Use GITHUB_REPOSITORY to avoid using GitHub expressions with pipes inside the run script
+          REPO="${GITHUB_REPOSITORY}"
+          REPO_LOWER=$(echo "$REPO" | tr '[:upper:]' '[:lower:]')
+          echo "repo_lower=$REPO_LOWER" >> "$GITHUB_OUTPUT"
+
+      - name: Get latest release tag
+        id: get_tags
+        run: |
+          # shellcheck disable=SC2086,SC2129
+          # Get the latest release version; relies on the `gh` CLI
+          LATEST_VERSION=$(gh release list --repo "${GITHUB_REPOSITORY}" --limit 1 --json tagName --jq '.[0].tagName')
+          echo "latest_version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Latest version: ${LATEST_VERSION}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull current Docker image
         run: |
-          docker pull ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
+          # shellcheck disable=SC2086,SC2129
+          docker pull "ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest" || true
 
       - name: Run Trivy vulnerability scanner on current image
         id: scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest'
-          format: 'json'
-          output: 'trivy-results-old.json'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '0' # Don't fail the workflow
+          image-ref: ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
+          format: json
+          output: trivy-results-old.json
+          severity: CRITICAL,HIGH
+          exit-code: "0" # Don't fail the workflow
 
       - name: Generate SARIF report for Security tab
         run: |
+          # shellcheck disable=SC2086,SC2129
           docker run --rm \
-            -v $(pwd):/workspace \
+            -v "$(pwd)":/workspace \
             aquasec/trivy:latest image \
             --format sarif \
             --output /workspace/trivy-results.sarif \
             --severity CRITICAL,HIGH \
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
+            "ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest"
 
       - name: Check for vulnerabilities
         id: check_vulns
         run: |
+          # shellcheck disable=SC2086,SC2129,SC2154
           # Parse JSON to get detailed vulnerability info
           VULN_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' trivy-results-old.json)
-          echo "vuln_count=${VULN_COUNT}" >> $GITHUB_OUTPUT
+          echo "vuln_count=${VULN_COUNT}" >> "$GITHUB_OUTPUT"
           echo "Found ${VULN_COUNT} CRITICAL/HIGH vulnerabilities"
-          
+
           # Save vulnerability details for comparison later
           jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH") | {VulnerabilityID, PkgName, InstalledVersion, FixedVersion, Severity}]' trivy-results-old.json > vulnerabilities-old.json
-          
+
           if [ "$VULN_COUNT" -gt 0 ]; then
-            echo "vulnerabilities_found=true" >> $GITHUB_OUTPUT
+            echo "vulnerabilities_found=true" >> "$GITHUB_OUTPUT"
             echo "::warning::Found ${VULN_COUNT} vulnerabilities in current image"
-            
+
             # Display summary
             echo "### Vulnerability Summary:"
-            jq -r '.[] | "- [\(.Severity)] \(.VulnerabilityID) in \(.PkgName) \(.InstalledVersion) (fix: \(.FixedVersion // "no fix available"))"' vulnerabilities-old.json | head -20
+            jq -r '.[] | "- [\(.Severity)] \(.VulnerabilityID) in \(.PkgName) \(.InstalledVersion) (fix: \(.FixedVersion // \"no fix available\"))"' vulnerabilities-old.json | head -20
           else
-            echo "vulnerabilities_found=false" >> $GITHUB_OUTPUT
+            echo "vulnerabilities_found=false" >> "$GITHUB_OUTPUT"
             echo "✓ No critical or high vulnerabilities found"
           fi
 
@@ -95,12 +105,12 @@ jobs:
           retention-days: 7
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
         if: always()
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results.sarif
 
-      - name: Create issue if vulnerabilities found
+      - name: Create or update issue if vulnerabilities found
         if: steps.check_vulns.outputs.vulnerabilities_found == 'true'
         uses: actions/github-script@v8
         with:
@@ -108,24 +118,24 @@ jobs:
             const issueTitle = '🔒 Security vulnerabilities detected in Docker base image';
             const issueBody = `
             ## Security Scan Alert
-            
+
             The scheduled security scan has detected vulnerabilities in the Docker base image.
-            
+
             **Scan Date**: ${new Date().toISOString()}
             **Image**: ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
             **Latest Version**: ${{ steps.get_tags.outputs.latest_version }}
-            
+
             ### Actions Taken
             - Vulnerability scan results have been uploaded to the Security tab
             - A workflow to rebuild the Docker image will be triggered automatically
-            
+
             ### Details
             Check the [Security tab](https://github.com/${{ steps.repo_vars.outputs.repo_lower }}/security/code-scanning) for detailed vulnerability information.
-            
+
             ---
             *This issue was automatically created by the Docker Security Scan workflow*
             `;
-            
+
             // Check if an issue already exists
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -133,9 +143,9 @@ jobs:
               state: 'open',
               labels: ['security', 'docker', 'automated']
             });
-            
+
             const existingIssue = issues.data.find(issue => issue.title === issueTitle);
-            
+
             if (existingIssue) {
               // Update existing issue with a comment
               await github.rest.issues.createComment({
@@ -167,7 +177,7 @@ jobs:
       packages: write
       id-token: write
       issues: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -195,15 +205,16 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
+          # shellcheck disable=SC2086,SC2129
           TAG="${{ needs.scan.outputs.current_tag }}"
-          VERSION="${TAG#v}" # Remove 'v' prefix
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          
+          VERSION="${TAG#v}" # Remove 'v' prefix if present
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
           # Extract major and major.minor versions
-          MAJOR=$(echo $VERSION | cut -d. -f1)
-          MINOR=$(echo $VERSION | cut -d. -f2)
-          echo "major=${MAJOR}" >> $GITHUB_OUTPUT
-          echo "major_minor=${MAJOR}.${MINOR}" >> $GITHUB_OUTPUT
+          MAJOR=$(echo "${VERSION}" | cut -d. -f1)
+          MINOR=$(echo "${VERSION}" | cut -d. -f2)
+          echo "major=${MAJOR}" >> "$GITHUB_OUTPUT"
+          echo "major_minor=${MAJOR}.${MINOR}" >> "$GITHUB_OUTPUT"
 
       - name: Build test image with fresh base
         id: build-test
@@ -212,7 +223,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:test-rebuild
+          tags: ghcr.io/${{ needs.scan.outputs.repo_lower }}:test-rebuild
           cache-from: type=gha
           platforms: linux/amd64
           # Force pull fresh base images
@@ -222,41 +233,42 @@ jobs:
       - name: Scan rebuilt image for vulnerabilities
         id: scan_new
         run: |
+          # shellcheck disable=SC2086,SC2129,SC2154
           echo "Scanning newly built image..."
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -v $(pwd):/workspace \
+            -v "$(pwd)":/workspace \
             aquasec/trivy:latest image \
             --format json \
             --output /workspace/trivy-results-new.json \
             --severity CRITICAL,HIGH \
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:test-rebuild
-          
+            "ghcr.io/${{ needs.scan.outputs.repo_lower }}:test-rebuild"
+
           # Extract new vulnerabilities
           jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH") | {VulnerabilityID, PkgName, InstalledVersion, FixedVersion, Severity}]' trivy-results-new.json > vulnerabilities-new.json
-          
+
           NEW_VULN_COUNT=$(jq 'length' vulnerabilities-new.json)
           OLD_VULN_COUNT=${{ needs.scan.outputs.old_vuln_count }}
-          
-          echo "old_vuln_count=${OLD_VULN_COUNT}" >> $GITHUB_OUTPUT
-          echo "new_vuln_count=${NEW_VULN_COUNT}" >> $GITHUB_OUTPUT
-          
+
+          echo "old_vuln_count=${OLD_VULN_COUNT}" >> "$GITHUB_OUTPUT"
+          echo "new_vuln_count=${NEW_VULN_COUNT}" >> "$GITHUB_OUTPUT"
+
           echo "### Vulnerability Comparison:"
           echo "Old image: ${OLD_VULN_COUNT} vulnerabilities"
           echo "New image: ${NEW_VULN_COUNT} vulnerabilities"
-          
+
           if [ "$NEW_VULN_COUNT" -lt "$OLD_VULN_COUNT" ]; then
             FIXED_COUNT=$((OLD_VULN_COUNT - NEW_VULN_COUNT))
             echo "✓ Fixed ${FIXED_COUNT} vulnerabilities!"
-            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
           elif [ "$NEW_VULN_COUNT" -eq "$OLD_VULN_COUNT" ]; then
             echo "⚠ No vulnerabilities were fixed"
-            echo "should_publish=false" >> $GITHUB_OUTPUT
-            
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+
             # Check if the vulnerabilities are exactly the same
             OLD_IDS=$(jq -r '.[].VulnerabilityID' vulnerabilities-old.json | sort)
             NEW_IDS=$(jq -r '.[].VulnerabilityID' vulnerabilities-new.json | sort)
-            
+
             if [ "$OLD_IDS" = "$NEW_IDS" ]; then
               echo "The same vulnerabilities exist. No fix available yet."
             else
@@ -264,61 +276,60 @@ jobs:
             fi
           else
             echo "⚠ More vulnerabilities found in new image!"
-            echo "should_publish=false" >> $GITHUB_OUTPUT
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Generate comparison report
         id: report
         run: |
-          echo "# Vulnerability Scan Comparison Report" > comparison-report.md
-          echo "" >> comparison-report.md
-          echo "**Scan Date**: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> comparison-report.md
-          echo "**Image Version**: ${{ steps.version.outputs.version }}" >> comparison-report.md
-          echo "" >> comparison-report.md
-          
+          # shellcheck disable=SC2086,SC2129,SC2154
+          # Build comparison report using a grouped redirect to avoid nested heredocs/anchors.
           OLD_COUNT=${{ steps.scan_new.outputs.old_vuln_count }}
           NEW_COUNT=${{ steps.scan_new.outputs.new_vuln_count }}
-          
-          echo "## Summary" >> comparison-report.md
-          echo "- **Old Image**: ${OLD_COUNT} vulnerabilities" >> comparison-report.md
-          echo "- **New Image**: ${NEW_COUNT} vulnerabilities" >> comparison-report.md
-          
-          if [ "$NEW_COUNT" -lt "$OLD_COUNT" ]; then
-            FIXED=$((OLD_COUNT - NEW_COUNT))
-            echo "- **Status**: ✅ ${FIXED} vulnerabilities fixed" >> comparison-report.md
-          elif [ "$NEW_COUNT" -eq "$OLD_COUNT" ]; then
-            echo "- **Status**: ⚠️ No vulnerabilities fixed" >> comparison-report.md
-          else
-            echo "- **Status**: ❌ More vulnerabilities in new image" >> comparison-report.md
-          fi
-          
-          echo "" >> comparison-report.md
-          echo "## Fixed Vulnerabilities" >> comparison-report.md
-          
-          # Find fixed vulnerabilities (in old but not in new)
-          OLD_IDS=$(jq -r '.[].VulnerabilityID' vulnerabilities-old.json)
-          FIXED_VULNS=""
-          for vuln_id in $OLD_IDS; do
-            if ! jq -e --arg id "$vuln_id" '.[] | select(.VulnerabilityID == $id)' vulnerabilities-new.json > /dev/null 2>&1; then
-              VULN_DETAILS=$(jq -r --arg id "$vuln_id" '.[] | select(.VulnerabilityID == $id) | "- [\(.Severity)] `\(.VulnerabilityID)` in \(.PkgName) \(.InstalledVersion)"' vulnerabilities-old.json)
-              echo "$VULN_DETAILS" >> comparison-report.md
-              FIXED_VULNS="true"
+
+          {
+            echo "# Vulnerability Scan Comparison Report"
+            echo
+            echo "**Scan Date**: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "**Image Version**: ${{ steps.version.outputs.version }}"
+            echo
+            echo "## Summary"
+            echo "- **Old Image**: ${OLD_COUNT} vulnerabilities"
+            echo "- **New Image**: ${NEW_COUNT} vulnerabilities"
+            if [ "${NEW_COUNT}" -lt "${OLD_COUNT}" ]; then
+              FIXED=$((OLD_COUNT - NEW_COUNT))
+              echo "- **Status**: ✅ ${FIXED} vulnerabilities fixed"
+            elif [ "${NEW_COUNT}" -eq "${OLD_COUNT}" ]; then
+              echo "- **Status**: ⚠️ No vulnerabilities fixed"
+            else
+              echo "- **Status**: ❌ More vulnerabilities in new image"
             fi
-          done
-          
-          if [ -z "$FIXED_VULNS" ]; then
-            echo "None" >> comparison-report.md
-          fi
-          
-          echo "" >> comparison-report.md
-          echo "## Remaining Vulnerabilities" >> comparison-report.md
-          
-          if [ "$NEW_COUNT" -gt 0 ]; then
-            jq -r '.[] | "- [\(.Severity)] `\(.VulnerabilityID)` in \(.PkgName) \(.InstalledVersion) (fix available: \(.FixedVersion // "no"))"' vulnerabilities-new.json >> comparison-report.md
-          else
-            echo "None" >> comparison-report.md
-          fi
-          
+
+            echo
+            echo "## Fixed Vulnerabilities"
+            # Find fixed vulnerabilities (in old but not in new)
+            OLD_IDS=$(jq -r '.[].VulnerabilityID' vulnerabilities-old.json || true)
+            FIXED_FOUND=0
+            for vuln_id in $OLD_IDS; do
+              if ! jq -e --arg id "$vuln_id" '.[] | select(.VulnerabilityID == $id)' vulnerabilities-new.json > /dev/null 2>&1; then
+                jq -r --arg id "$vuln_id" '.[] | select(.VulnerabilityID == $id) | "- [\(.Severity)] `\(.VulnerabilityID)` in \(.PkgName) \(.InstalledVersion)"' vulnerabilities-old.json
+                FIXED_FOUND=1
+              fi
+            done
+            if [ "$FIXED_FOUND" -eq 0 ]; then
+              echo "None"
+            fi
+
+            echo
+            echo "## Remaining Vulnerabilities"
+            if [ "${NEW_COUNT}" -gt 0 ]; then
+              jq -r '.[] | "- [\(.Severity)] `\(.VulnerabilityID)` in \(.PkgName) \(.InstalledVersion) (fix available: \(.FixedVersion // \"no\"))"' vulnerabilities-new.json
+            else
+              echo "None"
+            fi
+          } > comparison-report.md
+
+          # Output to console for workflow logs
           cat comparison-report.md
 
       - name: Publish Docker image if vulnerabilities were fixed
@@ -329,12 +340,12 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.version }}
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.major_minor }}
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.major }}
+            ghcr.io/${{ needs.scan.outputs.repo_lower }}:latest
+            ghcr.io/${{ needs.scan.outputs.repo_lower }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ needs.scan.outputs.repo_lower }}:${{ steps.version.outputs.major_minor }}
+            ghcr.io/${{ needs.scan.outputs.repo_lower }}:${{ steps.version.outputs.major }}
           labels: |
-            org.opencontainers.image.title=${{ steps.repo_vars.outputs.repo_lower }}
+            org.opencontainers.image.title=${{ needs.scan.outputs.repo_lower }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.created=${{ github.event.repository.updated_at }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -351,11 +362,12 @@ jobs:
         env:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: |
+          # shellcheck disable=SC2086,SC2129,SC2154
           echo "Signing image with digest: ${DIGEST}"
           # Sign all tags
           for tag in latest ${{ steps.version.outputs.version }} ${{ steps.version.outputs.major_minor }} ${{ steps.version.outputs.major }}; do
-            echo "Signing ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${tag}"
-            cosign sign --yes ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${tag}@${DIGEST}
+            echo "Signing ghcr.io/${{ needs.scan.outputs.repo_lower }}:${tag}"
+            cosign sign --yes "ghcr.io/${{ needs.scan.outputs.repo_lower }}:${tag}@${DIGEST}"
           done
 
       - name: Comment on issue with results
@@ -364,27 +376,27 @@ jobs:
           script: |
             const fs = require('fs');
             const issueTitle = '🔒 Security vulnerabilities detected in Docker base image';
-            
+
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
               labels: ['security', 'docker', 'automated']
             });
-            
+
             const issue = issues.data.find(issue => issue.title === issueTitle);
-            
+
             if (!issue) {
               console.log('No issue found to comment on');
               return;
             }
-            
+
             const report = fs.readFileSync('comparison-report.md', 'utf8');
             const shouldPublish = '${{ steps.scan_new.outputs.should_publish }}' === 'true';
             const newDigest = '${{ steps.build-and-push.outputs.digest }}';
-            
+
             let commentBody = `## Rebuild Analysis\n\n${report}\n\n`;
-            
+
             if (shouldPublish) {
               commentBody += `## ✅ Docker Image Published\n\n`;
               commentBody += `Vulnerabilities were fixed! The Docker image has been rebuilt and published.\n\n`;
@@ -402,7 +414,7 @@ jobs:
               commentBody += `- New vulnerabilities were introduced\n\n`;
               commentBody += `This workflow will retry on the next scheduled run.`;
             }
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
