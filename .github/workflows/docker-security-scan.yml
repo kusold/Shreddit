@@ -21,26 +21,31 @@ jobs:
       current_tag: ${{ steps.get_tags.outputs.latest_version }}
       old_vuln_count: ${{ steps.check_vulns.outputs.vuln_count }}
     
-    steps:
-      - name: Get latest release tag
-        id: get_tags
-        run: |
-          # Get the latest release version
-          LATEST_VERSION=$(gh release list --repo ${{ github.repository }} --limit 1 --json tagName --jq '.[0].tagName')
-          echo "latest_version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
-          echo "Latest version: ${LATEST_VERSION}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     steps:
+       - name: Set repository variables
+         id: repo_vars
+         run: |
+           echo "repo_lower=${{ github.repository | lower }}" >> $GITHUB_OUTPUT
+
+       - name: Get latest release tag
+         id: get_tags
+         run: |
+           # Get the latest release version
+           LATEST_VERSION=$(gh release list --repo ${{ github.repository }} --limit 1 --json tagName --jq '.[0].tagName')
+           echo "latest_version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
+           echo "Latest version: ${LATEST_VERSION}"
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull current Docker image
         run: |
-          docker pull ghcr.io/${{ github.repository }}:latest
+          docker pull ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
 
       - name: Run Trivy vulnerability scanner on current image
         id: scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/${{ github.repository }}:latest'
+          image-ref: 'ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest'
           format: 'json'
           output: 'trivy-results-old.json'
           severity: 'CRITICAL,HIGH'
@@ -54,7 +59,7 @@ jobs:
             --format sarif \
             --output /workspace/trivy-results.sarif \
             --severity CRITICAL,HIGH \
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
 
       - name: Check for vulnerabilities
         id: check_vulns
@@ -107,7 +112,7 @@ jobs:
             The scheduled security scan has detected vulnerabilities in the Docker base image.
             
             **Scan Date**: ${new Date().toISOString()}
-            **Image**: ghcr.io/${{ github.repository }}:latest
+            **Image**: ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
             **Latest Version**: ${{ steps.get_tags.outputs.latest_version }}
             
             ### Actions Taken
@@ -115,7 +120,7 @@ jobs:
             - A workflow to rebuild the Docker image will be triggered automatically
             
             ### Details
-            Check the [Security tab](https://github.com/${{ github.repository }}/security/code-scanning) for detailed vulnerability information.
+            Check the [Security tab](https://github.com/${{ steps.repo_vars.outputs.repo_lower }}/security/code-scanning) for detailed vulnerability information.
             
             ---
             *This issue was automatically created by the Docker Security Scan workflow*
@@ -207,7 +212,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: ghcr.io/${{ github.repository }}:test-rebuild
+          tags: ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:test-rebuild
           cache-from: type=gha
           platforms: linux/amd64
           # Force pull fresh base images
@@ -225,7 +230,7 @@ jobs:
             --format json \
             --output /workspace/trivy-results-new.json \
             --severity CRITICAL,HIGH \
-            ghcr.io/${{ github.repository }}:test-rebuild
+            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:test-rebuild
           
           # Extract new vulnerabilities
           jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH") | {VulnerabilityID, PkgName, InstalledVersion, FixedVersion, Severity}]' trivy-results-new.json > vulnerabilities-new.json
@@ -324,12 +329,12 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.major_minor }}
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.major }}
+            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
+            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.major_minor }}
+            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.major }}
           labels: |
-            org.opencontainers.image.title=${{ github.repository }}
+            org.opencontainers.image.title=${{ steps.repo_vars.outputs.repo_lower }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.created=${{ github.event.repository.updated_at }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -349,8 +354,8 @@ jobs:
           echo "Signing image with digest: ${DIGEST}"
           # Sign all tags
           for tag in latest ${{ steps.version.outputs.version }} ${{ steps.version.outputs.major_minor }} ${{ steps.version.outputs.major }}; do
-            echo "Signing ghcr.io/${{ github.repository }}:${tag}"
-            cosign sign --yes ghcr.io/${{ github.repository }}:${tag}@${DIGEST}
+            echo "Signing ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${tag}"
+            cosign sign --yes ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${tag}@${DIGEST}
           done
 
       - name: Comment on issue with results
