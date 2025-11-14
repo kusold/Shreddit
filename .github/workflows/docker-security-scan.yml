@@ -4,13 +4,7 @@ on:
   schedule:
     # Run daily at 2 AM UTC
     - cron: '0 2 * * *'
-  workflow_dispatch:
-    inputs:
-      scan_name:
-        description: 'Name for this manual scan'
-        required: false
-        default: 'Manual Security Scan'
-        type: string
+  workflow_dispatch: # Allow manual triggers
 
 permissions:
   contents: read
@@ -22,8 +16,6 @@ jobs:
   scan:
     name: Scan Docker Image for Vulnerabilities
     runs-on: ubuntu-latest
-    env:
-      SCAN_NAME: ${{ github.event.inputs.scan_name || 'Scheduled Security Scan' }}
     outputs:
       vulnerabilities_found: ${{ steps.check_vulns.outputs.vulnerabilities_found }}
       current_tag: ${{ steps.get_tags.outputs.latest_version }}
@@ -113,7 +105,7 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const issueTitle = `🔒 ${process.env.SCAN_NAME}: Security vulnerabilities detected in Docker base image`;
+            const issueTitle = '🔒 Security vulnerabilities detected in Docker base image';
             const issueBody = `
             ## Security Scan Alert
             
@@ -170,8 +162,6 @@ jobs:
     needs: scan
     if: needs.scan.outputs.vulnerabilities_found == 'true'
     runs-on: ubuntu-latest
-    env:
-      SCAN_NAME: ${{ github.event.inputs.scan_name || 'Scheduled Security Scan' }}
     permissions:
       contents: read
       packages: write
@@ -373,7 +363,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const issueTitle = `🔒 ${process.env.SCAN_NAME}: Security vulnerabilities detected in Docker base image`;
+            const issueTitle = '🔒 Security vulnerabilities detected in Docker base image';
             
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
