@@ -20,11 +20,13 @@ jobs:
       vulnerabilities_found: ${{ steps.check_vulns.outputs.vulnerabilities_found }}
       current_tag: ${{ steps.get_tags.outputs.latest_version }}
       old_vuln_count: ${{ steps.check_vulns.outputs.vuln_count }}
+      repo_lower: ${{ steps.repo_vars.outputs.repo_lower }}
     steps:
       - name: Set repository variables
         id: repo_vars
         run: |
-          echo "repo_lower=${{ github.repository | lower }}" >> $GITHUB_OUTPUT
+          REPO=${{ github.repository }}
+          echo "repo_lower=${REPO@L}" >> $GITHUB_OUTPUT
 
       - name: Get latest release tag
         id: get_tags
@@ -211,7 +213,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:test-rebuild
+          tags: ghcr.io/${{ needs.scan.outputs.repo_lower }}:test-rebuild
           cache-from: type=gha
           platforms: linux/amd64
           # Force pull fresh base images
@@ -229,7 +231,7 @@ jobs:
             --format json \
             --output /workspace/trivy-results-new.json \
             --severity CRITICAL,HIGH \
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:test-rebuild
+            ghcr.io/${{ needs.scan.outputs.repo_lower  }}:test-rebuild
 
           # Extract new vulnerabilities
           jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH") | {VulnerabilityID, PkgName, InstalledVersion, FixedVersion, Severity}]' trivy-results-new.json > vulnerabilities-new.json
@@ -328,12 +330,12 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:latest
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.version }}
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.major_minor }}
-            ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${{ steps.version.outputs.major }}
+            ghcr.io/${{ needs.scan.outputs.repo_lower }}:latest
+            ghcr.io/${{ needs.scan.outputs.repo_lower }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ needs.scan.outputs.repo_lower }}:${{ steps.version.outputs.major_minor }}
+            ghcr.io/${{ needs.scan.outputs.repo_lower }}:${{ steps.version.outputs.major }}
           labels: |
-            org.opencontainers.image.title=${{ steps.repo_vars.outputs.repo_lower }}
+            org.opencontainers.image.title=${{ needs.scan.outputs.repo_lower }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.created=${{ github.event.repository.updated_at }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -353,8 +355,8 @@ jobs:
           echo "Signing image with digest: ${DIGEST}"
           # Sign all tags
           for tag in latest ${{ steps.version.outputs.version }} ${{ steps.version.outputs.major_minor }} ${{ steps.version.outputs.major }}; do
-            echo "Signing ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${tag}"
-            cosign sign --yes ghcr.io/${{ steps.repo_vars.outputs.repo_lower }}:${tag}@${DIGEST}
+            echo "Signing ghcr.io/${{ needs.scan.outputs.repo_lower }}:${tag}"
+            cosign sign --yes ghcr.io/${{ needs.scan.outputs.repo_lower }}:${tag}@${DIGEST}
           done
 
       - name: Comment on issue with results
