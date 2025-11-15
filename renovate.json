@@ -1,39 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "local>kusold/renovate-config"
   ],
-  "semanticCommits": "enabled",
-  "semanticCommitType": "chore",
-  "semanticCommitScope": "deps",
-  "labels": ["dependencies"],
   "packageRules": [
-    {
-      "matchUpdateTypes": ["major"],
-      "addLabels": ["deps-major"]
-    },
-    {
-      "matchUpdateTypes": ["minor"],
-      "addLabels": ["deps-minor"]
-    },
-    {
-      "matchUpdateTypes": ["patch"],
-      "addLabels": ["deps-patch"]
-    },
-    {
-      "matchUpdateTypes": ["digest"],
-      "addLabels": ["deps-digest"]
-    },
-    {
-      "matchManagers": ["github-actions"],
-      "addLabels": ["github_actions"],
-      "rangeStrategy": "pin"
-    },
-    {
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
-      "automerge": true,
-      "automergeType": "branch"
-    }
   ]
 }
