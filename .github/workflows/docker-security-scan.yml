@@ -87,7 +87,7 @@ jobs:
 
       - name: Upload vulnerability data as artifact
         if: steps.check_vulns.outputs.vulnerabilities_found == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: vulnerability-data
           path: |
@@ -176,7 +176,7 @@ jobs:
           ref: ${{ needs.scan.outputs.current_tag }}
 
       - name: Download vulnerability data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: vulnerability-data
 
