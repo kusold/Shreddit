@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
   packages: write
   security-events: write
   id-token: write
