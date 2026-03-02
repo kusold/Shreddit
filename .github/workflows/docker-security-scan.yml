@@ -88,7 +88,7 @@ jobs:
 
       - name: Upload vulnerability data as artifact
         if: steps.check_vulns.outputs.vulnerabilities_found == 'true'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: vulnerability-data
           path: |
