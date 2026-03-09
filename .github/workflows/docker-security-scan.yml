@@ -209,7 +209,7 @@ jobs:
 
       - name: Build test image with fresh base
         id: build-test
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: false
@@ -326,7 +326,7 @@ jobs:
       - name: Publish Docker image if vulnerabilities were fixed
         id: build-and-push
         if: steps.scan_new.outputs.should_publish == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
