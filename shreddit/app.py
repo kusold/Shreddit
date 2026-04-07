@@ -2,8 +2,8 @@
 """
 import argparse
 import os
+from importlib import resources
 
-import pkg_resources
 import yaml
 from appdirs import user_config_dir
 
@@ -24,11 +24,11 @@ def main():
         if not os.path.isfile("shreddit.yml"):
             print("Writing shreddit.yml file...")
             with open("shreddit.yml", "wb") as fout:
-                fout.write(pkg_resources.resource_string("shreddit", "shreddit.yml.example"))
+                fout.write(resources.files("shreddit").joinpath("shreddit.yml.example").read_bytes())
         if not os.path.isfile("praw.ini"):
             print("Writing praw.ini file...")
             with open("praw.ini", "wb") as fout:
-                fout.write(pkg_resources.resource_string("shreddit", "praw.ini.example"))
+                fout.write(resources.files("shreddit").joinpath("praw.ini.example").read_bytes())
         return
 
     config_dir = user_config_dir("shreddit/shreddit.yml")

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shreddit"
-version = "6.4.1"
+version = "6.4.2"
 description = "Remove your comment history on Reddit as deleting an account does not do so."
 readme = "README.md"
 license = { text = "FreeBSD License" }
@@ -25,7 +25,6 @@ dependencies = [
     "praw>=7.5.0",
     "PyYAML>=6.0.1",
     "requests>=2.32.4",
-    "setuptools>=65.0.0",
     "six>=1.12",
     "tornado>=6.5.1",
     "prometheus-client>=0.16.0",
