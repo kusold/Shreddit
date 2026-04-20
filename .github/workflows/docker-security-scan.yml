@@ -104,7 +104,7 @@ jobs:
 
       - name: Create issue if vulnerabilities found
         if: steps.check_vulns.outputs.vulnerabilities_found == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const issueTitle = '🔒 Security vulnerabilities detected in Docker base image';
@@ -361,7 +361,7 @@ jobs:
           done
 
       - name: Comment on issue with results
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
