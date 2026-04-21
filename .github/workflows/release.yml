@@ -91,7 +91,7 @@ jobs:
           mv dist/shreddit.exe dist/shreddit-${{ matrix.platform }}-${{ matrix.arch }}.exe
 
       - name: Upload binary to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.release.outputs.new_release_git_tag }}
           files: |
