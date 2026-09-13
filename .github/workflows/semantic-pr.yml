@@ -64,7 +64,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
 
       - name: Install commitlint
         run: |
